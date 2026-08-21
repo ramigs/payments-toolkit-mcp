@@ -35,11 +35,21 @@ pnpm run build
 
 ## Usage
 
-Run the server standalone (it waits on stdio, so this is mainly for sanity
-checking):
+The server supports two transports, chosen at startup.
+
+Stdio (default — one client per process, e.g. Claude Code/Desktop):
 
 ```bash
 pnpm run start
+```
+
+Streamable HTTP (a single long-running server multiple clients can connect
+to over `POST/GET/DELETE /mcp`, with sessions keyed by the `Mcp-Session-Id`
+header):
+
+```bash
+pnpm run start:http          # listens on PORT (default 3000)
+PORT=4000 pnpm run start:http
 ```
 
 Inspect and call the tools/resource directly via a local web UI, without
@@ -51,9 +61,17 @@ pnpm run inspect
 
 ## Connect to Claude Code
 
+Over stdio:
+
 ```bash
 claude mcp add payments-toolkit-mcp -- node /path/to/payments-toolkit-mcp/dist/index.js
 claude mcp list
+```
+
+Over HTTP (start the server with `pnpm run start:http` first):
+
+```bash
+claude mcp add --transport http payments-toolkit-mcp http://localhost:3000/mcp
 ```
 
 Inside a Claude Code session, run `/mcp` to confirm the connection and see
@@ -63,7 +81,11 @@ the discovered tools/resources.
 
 ```
 src/
-  index.ts                   # composition root: creates the server, wires up transport
+  index.ts                   # entry point: picks a transport from argv/env
+  server.ts                  # factory: builds an McpServer with tools/resources registered
+  transports/
+    stdio.ts                 # single-session stdio transport
+    http.ts                  # StreamableHTTPServerTransport, one server instance per session
   lib/                       # pure validation/lookup logic (no MCP dependency)
     luhn.ts
     card-networks.ts
@@ -79,5 +101,9 @@ src/
 
 ## Notes
 
-- Never `console.log` in this server — stdout is reserved for the JSON-RPC
-  protocol stream over stdio. Use `console.error` for any debug output.
+- Never `console.log` in this server — over stdio, stdout is reserved for
+  the JSON-RPC protocol stream. Use `console.error` for any debug output
+  (harmless but kept consistent for the HTTP transport too).
+- Each MCP server instance can only be `connect()`-ed to one transport, so
+  the HTTP transport creates a fresh `McpServer` per session (keyed by
+  `Mcp-Session-Id`) rather than sharing one across clients.

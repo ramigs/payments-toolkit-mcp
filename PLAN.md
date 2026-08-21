@@ -163,7 +163,33 @@ enough for the model to pick the right tool.
 
 - Wrap something else from your own domain (e.g. a design-system component
   lookup tool) — this is where MCP servers stop being toy projects.
-- Try `StreamableHTTPServerTransport` instead of stdio, for a server that
-  could be shared across multiple clients.
+- [x] Try `StreamableHTTPServerTransport` instead of stdio, for a server that
+  could be shared across multiple clients. See step 12 below.
 - Add a prompt template (the third MCP primitive, alongside tools and
   resources).
+
+### 12. Add the Streamable HTTP transport (done)
+
+Supporting both transports meant splitting `index.ts`: the tool/resource
+registration moved into a `createServer()` factory (`src/server.ts`), and
+each transport got its own module (`src/transports/stdio.ts`,
+`src/transports/http.ts`). `index.ts` now just picks one based on a
+`--http` flag.
+
+Key thing learned: an `McpServer` can only be `connect()`-ed to **one**
+transport — calling `connect()` twice throws. For stdio that's a non-issue
+(one process per client), but HTTP needs to serve multiple clients from one
+long-running process. The fix is the pattern from the SDK's own docs:
+create a brand-new `McpServer` + `StreamableHTTPServerTransport` pair per
+session, generated on the `initialize` request and keyed by the
+`Mcp-Session-Id` header on every request after that (`POST/GET/DELETE
+/mcp`). Requests with no session ID that aren't `initialize` get a 400.
+
+Used `express` for body parsing and routing — added as a real dependency
+(`pnpm add express`), not just for the stretch goal; it's the same pattern
+the SDK's own examples use for this transport, so no need to hand-roll body
+buffering over raw `node:http`.
+
+Verified with raw `curl`: `initialize` returns an `Mcp-Session-Id` header,
+reusing it on `tools/list` and `tools/call` works, and omitting it on a
+non-initialize request correctly 400s.
