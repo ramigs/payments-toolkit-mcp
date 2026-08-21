@@ -4,8 +4,9 @@ A minimal [Model Context Protocol](https://modelcontextprotocol.io) (MCP)
 server, built as a hands-on learning project (see [PLAN.md](./PLAN.md) for
 the full step-by-step walkthrough).
 
-It exposes payments-related validation utilities as MCP tools and one static
-resource — all local logic, no network calls, no API keys required.
+It exposes payments-related validation utilities as MCP tools, one static
+resource, and one prompt template — all local logic, no network calls, no
+API keys required.
 
 ## Tools
 
@@ -20,6 +21,14 @@ resource — all local logic, no network calls, no API keys required.
 
 - **`card_networks`** (`payments-toolkit://card-networks`) — static JSON
   listing of supported card networks and their prefix ranges.
+
+## Prompts
+
+- **`check_payment_details`** — takes an optional `cardNumber` and/or `iban`
+  argument and returns a message instructing the model to run the relevant
+  tools and summarize the results. Unlike tools, prompts are invoked
+  explicitly by the user (e.g. as a `/mcp__payments-toolkit-mcp__check_payment_details`
+  slash command in Claude Code), not chosen autonomously by the model.
 
 ## Prerequisites
 
@@ -75,14 +84,16 @@ claude mcp add --transport http payments-toolkit-mcp http://localhost:3000/mcp
 ```
 
 Inside a Claude Code session, run `/mcp` to confirm the connection and see
-the discovered tools/resources.
+the discovered tools/resources/prompts. If you add or change a prompt after
+the session already connected, reconnect via `/mcp` (or restart the
+session) — the prompt list is enumerated at connection time.
 
 ## Project structure
 
 ```
 src/
   index.ts                   # entry point: picks a transport from argv/env
-  server.ts                  # factory: builds an McpServer with tools/resources registered
+  server.ts                  # factory: builds an McpServer with tools/resources/prompts registered
   transports/
     stdio.ts                 # single-session stdio transport
     http.ts                  # StreamableHTTPServerTransport, one server instance per session
@@ -97,6 +108,8 @@ src/
     validate-iban.ts
   resources/                 # one file per registered MCP resource
     card-networks.ts
+  prompts/                   # one file per registered MCP prompt
+    check-payment-details.ts
 ```
 
 ## Notes

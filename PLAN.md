@@ -163,8 +163,8 @@ enough for the model to pick the right tool.
 
 - [x] Try `StreamableHTTPServerTransport` instead of stdio, for a server that
       could be shared across multiple clients. See step 12 below.
-- Add a prompt template (the third MCP primitive, alongside tools and
-  resources).
+- [x] Add a prompt template (the third MCP primitive, alongside tools and
+      resources). See step 13 below.
 
 ### 12. Add the Streamable HTTP transport (done)
 
@@ -191,3 +191,32 @@ buffering over raw `node:http`.
 Verified with raw `curl`: `initialize` returns an `Mcp-Session-Id` header,
 reusing it on `tools/list` and `tools/call` works, and omitting it on a
 non-initialize request correctly 400s.
+
+### 13. Add a prompt template (done)
+
+Registered `check_payment_details` (`src/prompts/check-payment-details.ts`)
+via `server.registerPrompt`, following the same one-file-per-primitive
+pattern as `tools/` and `resources/`. It takes optional `cardNumber`/`iban`
+string arguments and returns a `messages` array telling the model which
+tools to call and how to format the summary — the server never calls the
+tools itself, it just hands back text.
+
+Key thing learned: prompts are the odd one out among the three primitives —
+tools are invoked by the model on its own judgment, resources are read by
+the client/model for context, but prompts are invoked **explicitly by the
+user**, surfaced as a picker or slash command (in Claude Code:
+`/mcp__payments-toolkit-mcp__check_payment_details`). A prompt's `argsSchema`
+is a flat shape of strings only (the MCP spec has clients render arguments
+as plain text fields), unlike a tool's `inputSchema`, which can be any Zod
+shape.
+
+Gotcha while testing: a client enumerates a server's prompts (and
+tools/resources) when the connection is first established, so adding a new
+prompt after a Claude Code session already connected doesn't show up until
+you reconnect via `/mcp` or restart the session — rebuilding `dist/` alone
+isn't enough for an already-connected client to see it.
+
+Verified two ways: `pnpm dlx @modelcontextprotocol/inspector --cli node
+dist/index.js --method prompts/list` (and `prompts/get` with sample args)
+to check the raw protocol output directly, then reconnecting in Claude Code
+and running the slash command end to end.
