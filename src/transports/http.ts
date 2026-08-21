@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import express, { type Request, type Response } from 'express';
+import express, { type Express, type Request, type Response } from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { createServer } from '../server.js';
 
-export async function runHttp(port: number): Promise<void> {
+export function createApp(): Express {
   const transports = new Map<string, StreamableHTTPServerTransport>();
 
   const app = express();
@@ -56,6 +56,12 @@ export async function runHttp(port: number): Promise<void> {
 
   app.get('/mcp', handleSessionRequest);
   app.delete('/mcp', handleSessionRequest);
+
+  return app;
+}
+
+export async function runHttp(port: number): Promise<void> {
+  const app = createApp();
 
   await new Promise<void>((resolve) => {
     app.listen(port, () => resolve());

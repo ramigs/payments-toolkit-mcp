@@ -68,6 +68,24 @@ wiring up a client:
 pnpm run inspect
 ```
 
+## Testing
+
+```bash
+pnpm test              # run the full suite once
+pnpm run test:watch    # re-run on file changes
+pnpm run test:coverage # run once and print a coverage report
+```
+
+Tests are split into two kinds, mirroring `src/`:
+
+- `tests/unit/` — pure logic (`src/lib/*`), no MCP or HTTP involved.
+- `tests/integration/` — `server.test.ts` wires the real `McpServer` to a
+  real `Client` over an in-memory transport and drives it through
+  `tools/resources/prompts`; `http.test.ts` drives the Streamable HTTP
+  transport's Express app directly with
+  [supertest](https://github.com/ladjs/supertest) to cover session
+  creation/reuse/teardown.
+
 ## Connect to Claude Code
 
 Over stdio:
@@ -108,8 +126,13 @@ src/
     validate-iban.ts
   resources/                 # one file per registered MCP resource
     card-networks.ts
-  prompts/                   # one file per registered MCP prompt
+  prompts/                    # one file per registered MCP prompt
     check-payment-details.ts
+tests/
+  unit/lib/                   # unit tests for src/lib, mirrored 1:1
+  integration/
+    server.test.ts            # McpServer <-> Client over an in-memory transport
+    http.test.ts              # Streamable HTTP transport, via supertest
 ```
 
 ## Notes
