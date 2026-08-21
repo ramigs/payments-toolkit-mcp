@@ -161,10 +161,8 @@ enough for the model to pick the right tool.
 
 ## Stretch goals (after the basics work)
 
-- Wrap something else from your own domain (e.g. a design-system component
-  lookup tool) — this is where MCP servers stop being toy projects.
 - [x] Try `StreamableHTTPServerTransport` instead of stdio, for a server that
-  could be shared across multiple clients. See step 12 below.
+      could be shared across multiple clients. See step 12 below.
 - Add a prompt template (the third MCP primitive, alongside tools and
   resources).
 
