@@ -52,11 +52,11 @@ Add a minimal `tsconfig.json` targeting ES2022+ with `module: "NodeNext"`.
 In `src/index.ts`:
 
 ```ts
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 const server = new McpServer({
-  name: "payments-toolkit-mcp",
-  version: "1.0.0",
+  name: 'payments-toolkit-mcp',
+  version: '1.0.0',
 });
 ```
 
@@ -97,7 +97,7 @@ const server = new McpServer({
 ### 7. Wire up the stdio transport
 
 ```ts
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 const transport = new StdioServerTransport();
 await server.connect(transport);

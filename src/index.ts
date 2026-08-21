@@ -1,7 +1,7 @@
-import { runStdio } from "./transports/stdio.js";
-import { runHttp } from "./transports/http.js";
+import { runStdio } from './transports/stdio.js';
+import { runHttp } from './transports/http.js';
 
-const useHttp = process.argv.includes("--http");
+const useHttp = process.argv.includes('--http');
 
 if (useHttp) {
   const port = Number(process.env.PORT ?? 3000);
