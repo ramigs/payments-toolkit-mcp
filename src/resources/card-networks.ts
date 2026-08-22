@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CARD_NETWORKS } from '../lib/card-networks.js';
+import { withResourceLogging } from '../lib/with-logging.js';
 
 const RESOURCE_URI = 'payments-toolkit://card-networks';
 
@@ -14,7 +15,7 @@ export function registerCardNetworksResource(server: McpServer): void {
         'identify them.',
       mimeType: 'application/json',
     },
-    async (uri) => {
+    withResourceLogging('card_networks', async (uri) => {
       const data = CARD_NETWORKS.map(({ name, prefixRanges }) => ({
         name,
         prefixRanges,
@@ -29,6 +30,6 @@ export function registerCardNetworksResource(server: McpServer): void {
           },
         ],
       };
-    },
+    }),
   );
 }

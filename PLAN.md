@@ -165,6 +165,8 @@ enough for the model to pick the right tool.
       could be shared across multiple clients. See step 12 below.
 - [x] Add a prompt template (the third MCP primitive, alongside tools and
       resources). See step 13 below.
+- [x] Structured logging, to have a debuggable trace of every call (for both
+      stdio and HTTP). See step 14 below.
 
 ### 12. Add the Streamable HTTP transport (done)
 
@@ -220,3 +222,42 @@ Verified two ways: `pnpm dlx @modelcontextprotocol/inspector --cli node
 dist/index.js --method prompts/list` (and `prompts/get` with sample args)
 to check the raw protocol output directly, then reconnecting in Claude Code
 and running the slash command end to end.
+
+### 14. Add structured logging (done)
+
+Added `pino` (real dependency) and `pino-pretty` (dev-only), behind a
+single `logger` instance in `src/lib/logger.ts`: raw JSON to stderr when
+`NODE_ENV=production`, pretty-printed stderr otherwise. Both transports'
+startup banners (`console.error` calls) were switched to `logger.info` too
+— mixing a plain string line with JSON trace lines on the same stream
+would break anything parsing the log as JSONL.
+
+Per-call tracing lives in `src/lib/with-logging.ts`, covering all three
+primitives: `withToolLogging`, `withResourceLogging`, and
+`withPromptLogging`, each a thin wrapper around a shared
+`withCallLogging` core rather than logging calls sprinkled inside each
+handler body. It logs a `start` and `finish`/`error` line per call with
+`kind` (`tool`/`resource`/`prompt`), `target` (the primitive's name), and
+— from the SDK's `RequestHandlerExtra` passed to every tool, resource,
+and prompt callback alike — `requestId` (all calls) and `sessionId`
+(HTTP only, since stdio is one client per process). That `extra` object
+already carries everything needed to correlate a call; no need to
+generate a separate id.
+
+Gotcha: pino treats a `name` binding specially — it folds it into the
+logger's display prefix instead of showing it as a normal field — so the
+per-call label is bound as `target`, not `name`.
+
+Key thing learned: since every tool/prompt here takes a raw payment
+identifier (card number, IBAN) as its only string argument, the wrapper
+masks _all_ string args to their last 4 characters by default rather than
+maintaining a per-primitive list of sensitive field names — safer default
+for this domain, and one less thing to remember when adding a new
+tool/prompt later. Resource reads have no such argument (`card_networks`
+takes only a URI), so only the URI is logged.
+
+Verified with the MCP Inspector CLI (stdio, across `tools/call`,
+`resources/read`, and `prompts/get`) and raw `curl` against the HTTP
+transport: confirmed masked args in the trace, `requestId`/`sessionId`
+correlation, stdout staying untouched on the stdio transport, and the
+JSON-vs-pretty switch via `NODE_ENV`.

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { withPromptLogging } from '../lib/with-logging.js';
 
 export function registerCheckPaymentDetailsPrompt(server: McpServer): void {
   server.registerPrompt(
@@ -17,7 +18,7 @@ export function registerCheckPaymentDetailsPrompt(server: McpServer): void {
         iban: z.string().optional().describe('IBAN to validate'),
       },
     },
-    ({ cardNumber, iban }) => {
+    withPromptLogging('check_payment_details', ({ cardNumber, iban }) => {
       const requests: string[] = [];
       if (cardNumber) {
         requests.push(
@@ -51,6 +52,6 @@ export function registerCheckPaymentDetailsPrompt(server: McpServer): void {
           },
         ],
       };
-    },
+    }),
   );
 }

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { isValidLuhn } from '../lib/luhn.js';
 import { cardNumberSchema } from '../lib/schemas.js';
+import { withToolLogging } from '../lib/with-logging.js';
 
 export function registerValidateCardNumberTool(server: McpServer): void {
   server.registerTool(
@@ -18,12 +19,12 @@ export function registerValidateCardNumberTool(server: McpServer): void {
         valid: z.boolean(),
       },
     },
-    async ({ cardNumber }) => {
+    withToolLogging('validate_card_number', async ({ cardNumber }) => {
       const valid = isValidLuhn(cardNumber);
       return {
         content: [{ type: 'text', text: JSON.stringify({ valid }) }],
         structuredContent: { valid },
       };
-    },
+    }),
   );
 }

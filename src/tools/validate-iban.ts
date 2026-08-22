@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { validateIban } from '../lib/iban.js';
+import { withToolLogging } from '../lib/with-logging.js';
 
 export function registerValidateIbanTool(server: McpServer): void {
   server.registerTool(
@@ -19,12 +20,12 @@ export function registerValidateIbanTool(server: McpServer): void {
         country: z.string().optional(),
       },
     },
-    async ({ iban }) => {
+    withToolLogging('validate_iban', async ({ iban }) => {
       const result = validateIban(iban);
       return {
         content: [{ type: 'text', text: JSON.stringify(result) }],
         structuredContent: result,
       };
-    },
+    }),
   );
 }

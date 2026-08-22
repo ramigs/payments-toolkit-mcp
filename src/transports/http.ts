@@ -3,6 +3,7 @@ import express, { type Express, type Request, type Response } from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { createServer } from '../server.js';
+import { logger } from '../lib/logger.js';
 
 export function createApp(): Express {
   const transports = new Map<string, StreamableHTTPServerTransport>();
@@ -66,7 +67,7 @@ export async function runHttp(port: number): Promise<void> {
   await new Promise<void>((resolve) => {
     app.listen(port, () => resolve());
   });
-  console.error(
+  logger.info(
     `payments-toolkit-mcp server running on http://localhost:${port}/mcp`,
   );
 }

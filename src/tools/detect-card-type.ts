@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { detectCardType } from '../lib/card-networks.js';
 import { cardNumberSchema } from '../lib/schemas.js';
+import { withToolLogging } from '../lib/with-logging.js';
 
 export function registerDetectCardTypeTool(server: McpServer): void {
   server.registerTool(
@@ -19,12 +20,12 @@ export function registerDetectCardTypeTool(server: McpServer): void {
         network: z.string(),
       },
     },
-    async ({ cardNumber }) => {
+    withToolLogging('detect_card_type', async ({ cardNumber }) => {
       const network = detectCardType(cardNumber);
       return {
         content: [{ type: 'text', text: JSON.stringify({ network }) }],
         structuredContent: { network },
       };
-    },
+    }),
   );
 }
