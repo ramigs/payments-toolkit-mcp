@@ -111,7 +111,10 @@ describe('payments-toolkit-mcp server', () => {
         uri: 'payments-toolkit://card-networks',
       });
       const [content] = result.contents;
-      const data = JSON.parse(content.text as string);
+      if (!('text' in content)) {
+        throw new Error('Expected a text resource, got a binary blob');
+      }
+      const data = JSON.parse(content.text);
 
       expect(Array.isArray(data)).toBe(true);
       expect(data).toContainEqual({
@@ -130,7 +133,13 @@ describe('payments-toolkit-mcp server', () => {
           iban: 'DE89370400440532013000',
         },
       });
-      const text = result.messages[0].content.text as string;
+      const messageContent = result.messages[0].content;
+      if (messageContent.type !== 'text') {
+        throw new Error(
+          `Expected a text prompt message, got "${messageContent.type}"`,
+        );
+      }
+      const text = messageContent.text;
 
       expect(text).toContain('4111111111111111');
       expect(text).toContain('detect_card_type');
@@ -143,7 +152,13 @@ describe('payments-toolkit-mcp server', () => {
         name: 'check_payment_details',
         arguments: {},
       });
-      const text = result.messages[0].content.text as string;
+      const messageContent = result.messages[0].content;
+      if (messageContent.type !== 'text') {
+        throw new Error(
+          `Expected a text prompt message, got "${messageContent.type}"`,
+        );
+      }
+      const text = messageContent.text;
 
       expect(text).toContain('Ask the user for a card number and/or IBAN');
     });
