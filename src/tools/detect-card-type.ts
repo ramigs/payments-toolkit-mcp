@@ -1,11 +1,14 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { registerAppTool } from '@modelcontextprotocol/ext-apps/server';
 import { detectCardType } from '../lib/card-networks.js';
 import { cardNumberSchema } from '../lib/schemas.js';
+import { CARD_PREVIEW_RESOURCE_URI } from '../resources/card-preview.js';
 import { withToolLogging } from '../lib/with-logging.js';
 
 export function registerDetectCardTypeTool(server: McpServer): void {
-  server.registerTool(
+  registerAppTool(
+    server,
     'detect_card_type',
     {
       title: 'Detect Card Type',
@@ -18,13 +21,18 @@ export function registerDetectCardTypeTool(server: McpServer): void {
       },
       outputSchema: {
         network: z.string(),
+        last4: z.string(),
       },
+      // Links this tool to the card-preview widget; an MCP Apps host renders
+      // that resource and pushes this result to it.
+      _meta: { ui: { resourceUri: CARD_PREVIEW_RESOURCE_URI } },
     },
     withToolLogging('detect_card_type', async ({ cardNumber }) => {
       const network = detectCardType(cardNumber);
+      const last4 = cardNumber.slice(-4);
       return {
-        content: [{ type: 'text', text: JSON.stringify({ network }) }],
-        structuredContent: { network },
+        content: [{ type: 'text', text: JSON.stringify({ network, last4 }) }],
+        structuredContent: { network, last4 },
       };
     }),
   );

@@ -3,6 +3,7 @@ import { registerValidateCardNumberTool } from './tools/validate-card-number.js'
 import { registerDetectCardTypeTool } from './tools/detect-card-type.js';
 import { registerValidateIbanTool } from './tools/validate-iban.js';
 import { registerCardNetworksResource } from './resources/card-networks.js';
+import { registerCardPreviewResource } from './resources/card-preview.js';
 import { registerCheckPaymentDetailsPrompt } from './prompts/check-payment-details.js';
 
 export function createServer(): McpServer {
@@ -15,6 +16,7 @@ export function createServer(): McpServer {
   registerDetectCardTypeTool(server);
   registerValidateIbanTool(server);
   registerCardNetworksResource(server);
+  registerCardPreviewResource(server);
   registerCheckPaymentDetailsPrompt(server);
 
   return server;

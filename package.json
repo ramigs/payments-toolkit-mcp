@@ -4,14 +4,16 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build:widget": "vite build --config src/ui/card-preview/vite.config.ts",
+    "build": "pnpm run build:widget && tsc",
     "start": "node dist/index.js",
     "start:http": "node dist/index.js --http",
-    "inspect": "mcp-inspector node dist/index.js",
+    "inspect": "pnpm run build && mcp-inspector node dist/index.js",
+    "pretest": "pnpm run build:widget",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p src/ui/card-preview/tsconfig.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -23,6 +25,7 @@
   "type": "module",
   "packageManager": "pnpm@10.20.0",
   "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "express": "^5.2.1",
     "pino": "^10.3.1",
@@ -43,6 +46,8 @@
     "supertest": "^7.2.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.67.0",
+    "vite": "^8.2.2",
+    "vite-plugin-singlefile": "^2.3.3",
     "vitest": "^4.1.11"
   }
 }

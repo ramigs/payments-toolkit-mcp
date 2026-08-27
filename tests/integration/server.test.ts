@@ -39,6 +39,7 @@ describe('payments-toolkit-mcp server', () => {
     ]);
     expect(resources.resources.map((r) => r.uri)).toEqual([
       'payments-toolkit://card-networks',
+      'ui://payments-toolkit/card-preview',
     ]);
     expect(prompts.prompts.map((p) => p.name)).toEqual([
       'check_payment_details',
@@ -72,12 +73,40 @@ describe('payments-toolkit-mcp server', () => {
   });
 
   describe('detect_card_type tool', () => {
-    it('identifies a Visa number', async () => {
+    it('identifies a Visa number and returns the masked last four', async () => {
       const result = await client.callTool({
         name: 'detect_card_type',
         arguments: { cardNumber: '4111111111111111' },
       });
-      expect(result.structuredContent).toEqual({ network: 'Visa' });
+      expect(result.structuredContent).toEqual({
+        network: 'Visa',
+        last4: '1111',
+      });
+    });
+
+    it('is an MCP App tool bound to the card-preview UI resource', async () => {
+      const { tools } = await client.listTools();
+      const tool = tools.find((t) => t.name === 'detect_card_type');
+      expect(tool?._meta).toMatchObject({
+        ui: { resourceUri: 'ui://payments-toolkit/card-preview' },
+      });
+    });
+  });
+
+  describe('card_preview UI resource', () => {
+    it('serves the bundled widget HTML with the MCP App mime type', async () => {
+      const result = await client.readResource({
+        uri: 'ui://payments-toolkit/card-preview',
+      });
+      const [content] = result.contents;
+      if (!('text' in content)) {
+        throw new Error('expected a text resource');
+      }
+      expect(content.mimeType).toBe('text/html;profile=mcp-app');
+      // The widget is bundled to a single self-contained HTML file, so the
+      // MCP App SDK is inlined into it rather than fetched at runtime.
+      expect(content.text.toLowerCase()).toContain('<!doctype html>');
+      expect(content.text).toContain('id="card"');
     });
   });
 
