@@ -107,6 +107,10 @@ describe('payments-toolkit-mcp server', () => {
       // MCP App SDK is inlined into it rather than fetched at runtime.
       expect(content.text.toLowerCase()).toContain('<!doctype html>');
       expect(content.text).toContain('id="card"');
+      // The network artwork is inlined into the single-file bundle — the Visa
+      // brand colour proves an SVG made it in.
+      expect(content.text).toContain('id="logo"');
+      expect(content.text).toContain('#1434CB');
     });
   });
 

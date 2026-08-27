@@ -1,0 +1,25 @@
+Card network artwork
+====================
+
+The SVG files in this directory (visa.svg, mastercard.svg, amex.svg,
+discover.svg, diners.svg, jcb.svg) are the "flat-rounded" variants from:
+
+    svg-credit-card-payment-icons
+    https://github.com/aaronfagan/svg-credit-card-payment-icons
+
+Copyright (c) Aaron Fagan, licensed under the Apache License, Version 2.0.
+A copy of that license is in ./LICENSE. The files are redistributed here
+unmodified.
+
+Trademarks
+----------
+
+VISA, Mastercard, American Express, Discover, Diners Club, and JCB, together
+with their logos, are trademarks of their respective owners. They are used
+here only to identify the detected card network (nominative use). Their
+inclusion does not imply any affiliation with or endorsement by those
+companies. The Apache-2.0 license above applies to the SVG artwork only and
+grants no trademark rights.
+
+This is a personal learning project and is not affiliated with any card
+network or payment provider.

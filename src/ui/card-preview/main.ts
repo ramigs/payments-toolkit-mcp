@@ -9,24 +9,51 @@
 import { App } from '@modelcontextprotocol/ext-apps';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 
-const BRAND_COLORS: Record<string, string> = {
+// Network artwork (flat-rounded variant) from aaronfagan/svg-credit-card-
+// payment-icons, Apache-2.0 — see icons/LICENSE. Imported as raw strings so the
+// single-file bundle inlines them; each SVG is a self-contained rounded badge
+// shown small in the card's bottom-right corner.
+import visaSvg from './icons/visa.svg?raw';
+import mastercardSvg from './icons/mastercard.svg?raw';
+import amexSvg from './icons/amex.svg?raw';
+import discoverSvg from './icons/discover.svg?raw';
+import dinersSvg from './icons/diners.svg?raw';
+import jcbSvg from './icons/jcb.svg?raw';
+
+// Keys match the network names returned by `detect_card_type`.
+const NETWORK_SVG: Record<string, string> = {
+  Visa: visaSvg,
+  Mastercard: mastercardSvg,
+  'American Express': amexSvg,
+  Discover: discoverSvg,
+  'Diners Club': dinersSvg,
+  JCB: jcbSvg,
+};
+
+// Card-body colour per network. An unrecognised network falls back to grey and
+// the badge is hidden.
+const BRAND_COLOR: Record<string, string> = {
   Visa: '#1a1f71',
-  Mastercard: '#eb001b',
-  'American Express': '#006fcf',
-  Discover: '#ff6000',
+  Mastercard: '#1a1a1a',
+  'American Express': '#2e77bb',
+  Discover: '#1d1d1b',
   'Diners Club': '#0079be',
   JCB: '#0b4ea2',
 };
 const FALLBACK_COLOR = '#6b7280';
 
 const cardEl = document.getElementById('card') as HTMLElement;
-const brandEl = document.getElementById('brand') as HTMLElement;
+const logoEl = document.getElementById('logo') as HTMLElement;
 const numberEl = document.getElementById('number') as HTMLElement;
 
 function render(network: string, last4: string): void {
-  const known = network !== 'unknown';
-  cardEl.style.background = BRAND_COLORS[network] ?? FALLBACK_COLOR;
-  brandEl.textContent = known ? network : 'Unknown network';
+  const svg = NETWORK_SVG[network];
+  logoEl.innerHTML = svg ?? '';
+  cardEl.style.background = BRAND_COLOR[network] ?? FALLBACK_COLOR;
+  cardEl.setAttribute(
+    'aria-label',
+    svg ? `${network} card` : 'Card, network not recognised',
+  );
   numberEl.textContent = `•••• •••• •••• ${last4 || '••••'}`;
 }
 
