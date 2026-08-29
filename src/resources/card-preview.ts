@@ -38,7 +38,7 @@ export function registerCardPreviewResource(server: McpServer): void {
       title: 'Card Preview',
       description:
         'Interactive widget rendered by detect_card_type — shows the detected ' +
-        'network and the masked last four digits on a styled card.',
+        'network and the full card number on a styled card.',
     },
     withResourceLogging('card_preview', async (uri) => {
       const html = await loadWidgetHtml();

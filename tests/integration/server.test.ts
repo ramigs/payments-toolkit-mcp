@@ -73,14 +73,14 @@ describe('payments-toolkit-mcp server', () => {
   });
 
   describe('detect_card_type tool', () => {
-    it('identifies a Visa number and returns the masked last four', async () => {
+    it('identifies a Visa number and returns the full card number', async () => {
       const result = await client.callTool({
         name: 'detect_card_type',
         arguments: { cardNumber: '4111111111111111' },
       });
       expect(result.structuredContent).toEqual({
         network: 'Visa',
-        last4: '1111',
+        cardNumber: '4111111111111111',
       });
     });
 

@@ -21,7 +21,7 @@ export function registerDetectCardTypeTool(server: McpServer): void {
       },
       outputSchema: {
         network: z.string(),
-        last4: z.string(),
+        cardNumber: z.string(),
       },
       // Links this tool to the card-preview widget; an MCP Apps host renders
       // that resource and pushes this result to it.
@@ -29,10 +29,11 @@ export function registerDetectCardTypeTool(server: McpServer): void {
     },
     withToolLogging('detect_card_type', async ({ cardNumber }) => {
       const network = detectCardType(cardNumber);
-      const last4 = cardNumber.slice(-4);
       return {
-        content: [{ type: 'text', text: JSON.stringify({ network, last4 }) }],
-        structuredContent: { network, last4 },
+        content: [
+          { type: 'text', text: JSON.stringify({ network, cardNumber }) },
+        ],
+        structuredContent: { network, cardNumber },
       };
     }),
   );

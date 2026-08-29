@@ -46,7 +46,14 @@ const cardEl = document.getElementById('card') as HTMLElement;
 const logoEl = document.getElementById('logo') as HTMLElement;
 const numberEl = document.getElementById('number') as HTMLElement;
 
-function render(network: string, last4: string): void {
+// Group digits into fours for readability (`4111 1111 1111 1111`). Falls back
+// to a bullet placeholder before the first tool result arrives.
+function formatCardNumber(cardNumber: string): string {
+  if (!cardNumber) return '•••• •••• •••• ••••';
+  return cardNumber.replace(/\s+/g, '').replace(/(.{4})/g, '$1 ').trim();
+}
+
+function render(network: string, cardNumber: string): void {
   const svg = NETWORK_SVG[network];
   logoEl.innerHTML = svg ?? '';
   cardEl.style.background = BRAND_COLOR[network] ?? FALLBACK_COLOR;
@@ -54,13 +61,16 @@ function render(network: string, last4: string): void {
     'aria-label',
     svg ? `${network} card` : 'Card, network not recognised',
   );
-  numberEl.textContent = `•••• •••• •••• ${last4 || '••••'}`;
+  numberEl.textContent = formatCardNumber(cardNumber);
 }
 
 function applyResult(result: CallToolResult): void {
-  const { network, last4 } =
-    (result.structuredContent as { network?: string; last4?: string }) ?? {};
-  render(network ?? 'unknown', last4 ?? '');
+  const { network, cardNumber } =
+    (result.structuredContent as {
+      network?: string;
+      cardNumber?: string;
+    }) ?? {};
+  render(network ?? 'unknown', cardNumber ?? '');
 }
 
 const app = new App({ name: 'Card Preview', version: '1.0.0' });
