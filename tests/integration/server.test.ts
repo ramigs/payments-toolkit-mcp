@@ -40,6 +40,7 @@ describe('payments-toolkit-mcp server', () => {
     expect(resources.resources.map((r) => r.uri)).toEqual([
       'payments-toolkit://card-networks',
       'ui://payments-toolkit/card-preview',
+      'ui://payments-toolkit/iban-preview',
     ]);
     expect(prompts.prompts.map((p) => p.name)).toEqual([
       'check_payment_details',
@@ -115,26 +116,56 @@ describe('payments-toolkit-mcp server', () => {
   });
 
   describe('validate_iban tool', () => {
-    it('returns valid: true with the country for a valid IBAN', async () => {
+    it('returns the validated IBAN enriched with country name and flag', async () => {
       const result = await client.callTool({
         name: 'validate_iban',
         arguments: { iban: 'DE89370400440532013000' },
       });
-      expect(result.structuredContent).toEqual({
+      expect(result.structuredContent).toMatchObject({
         valid: true,
         country: 'DE',
+        countryName: 'Germany',
+        ibanFormatted: 'DE89 3704 0044 0532 0130 00',
       });
+      expect(
+        (result.structuredContent as { flagSvg: string }).flagSvg,
+      ).toContain('<svg');
     });
 
-    it('returns valid: false for a bad checksum', async () => {
+    it('reports the failing check for a bad checksum', async () => {
       const result = await client.callTool({
         name: 'validate_iban',
         arguments: { iban: 'DE89370400440532013001' },
       });
-      expect(result.structuredContent).toEqual({
+      expect(result.structuredContent).toMatchObject({
         valid: false,
         country: 'DE',
+        failureReason: 'checksum',
       });
+    });
+
+    it('is an MCP App tool bound to the iban-preview UI resource', async () => {
+      const { tools } = await client.listTools();
+      const tool = tools.find((t) => t.name === 'validate_iban');
+      expect(tool?._meta).toMatchObject({
+        ui: { resourceUri: 'ui://payments-toolkit/iban-preview' },
+      });
+    });
+  });
+
+  describe('iban_preview UI resource', () => {
+    it('serves the bundled widget HTML with the MCP App mime type', async () => {
+      const result = await client.readResource({
+        uri: 'ui://payments-toolkit/iban-preview',
+      });
+      const [content] = result.contents;
+      if (!('text' in content)) {
+        throw new Error('expected a text resource');
+      }
+      expect(content.mimeType).toBe('text/html;profile=mcp-app');
+      expect(content.text.toLowerCase()).toContain('<!doctype html>');
+      expect(content.text).toContain('id="iban"');
+      expect(content.text).toContain('id="flag"');
     });
   });
 

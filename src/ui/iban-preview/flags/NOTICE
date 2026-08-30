@@ -1,0 +1,6 @@
+Flags in this directory are from flag-icons (https://github.com/lipis/flag-icons),
+MIT License, Copyright (c) 2013 Panayiotis Lipiridis.
+
+Only the ISO 3166-1 alpha-2 codes present in src/lib/iban.ts are vendored here,
+optimised with SVGO; a few with a heavy coat of arms are rasterised to a small
+PNG wrapped in an <image> SVG. Regenerate with `pnpm run vendor:flags`.

@@ -11,5 +11,5 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
-  "exclude": ["src/ui/card-preview"]
+  "exclude": ["src/ui/card-preview", "src/ui/iban-preview"]
 }

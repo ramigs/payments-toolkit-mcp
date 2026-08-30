@@ -2,3 +2,6 @@ dist/
 coverage/
 node_modules/
 pnpm-lock.yaml
+
+# Vendored, machine-generated (pnpm run vendor:flags)
+src/ui/iban-preview/flags/

@@ -50,7 +50,10 @@ const numberEl = document.getElementById('number') as HTMLElement;
 // to a bullet placeholder before the first tool result arrives.
 function formatCardNumber(cardNumber: string): string {
   if (!cardNumber) return '•••• •••• •••• ••••';
-  return cardNumber.replace(/\s+/g, '').replace(/(.{4})/g, '$1 ').trim();
+  return cardNumber
+    .replace(/\s+/g, '')
+    .replace(/(.{4})/g, '$1 ')
+    .trim();
 }
 
 function render(network: string, cardNumber: string): void {

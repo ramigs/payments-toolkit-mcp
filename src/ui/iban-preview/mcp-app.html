@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>IBAN Preview</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, system-ui, sans-serif;
+      }
+      .tile {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 340px;
+        padding: 20px;
+        border-radius: 14px;
+        background: linear-gradient(150deg, #1e293b 0%, #334155 100%);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .bank {
+        width: 34px;
+        height: 34px;
+        opacity: 0.9;
+      }
+      /* 4:3 chip so a `xMidYMid meet` flag fills it exactly, no letterbox. */
+      .flag {
+        width: 48px;
+        height: 36px;
+        border-radius: 4px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+      }
+      .flag svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .iban {
+        min-width: 0;
+        direction: ltr;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        /* Base size for short IBANs; main.ts shrinks it (down to --iban-min)
+           so the whole IBAN always fits on one line at the width the host
+           gives us — the widget can't ask for more. */
+        font-size: 16px;
+        line-height: 1.45;
+        letter-spacing: 0.04em;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      }
+      .country {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.75);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .pill.valid {
+        background: #16a34a;
+        color: #fff;
+      }
+      .pill.invalid {
+        background: #dc2626;
+        color: #fff;
+      }
+      .pill.unknown {
+        background: rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tile" id="tile" aria-label="IBAN preview">
+      <div class="row">
+        <svg
+          class="bank"
+          viewBox="0 0 40 40"
+          role="img"
+          aria-label="Bank"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g fill="currentColor">
+            <path d="M20 3 3 12v3h34v-3L20 3Z" />
+            <rect x="6" y="17" width="4" height="13" />
+            <rect x="14" y="17" width="4" height="13" />
+            <rect x="22" y="17" width="4" height="13" />
+            <rect x="30" y="17" width="4" height="13" />
+            <rect x="3" y="32" width="34" height="5" rx="1" />
+          </g>
+        </svg>
+        <div class="flag" id="flag" role="img" aria-label="Country flag">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              fill="none"
+              stroke="rgba(255,255,255,0.7)"
+              stroke-width="1.4"
+              d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 0c3 3 3 17 0 20M2 12h20M4 7h16M4 17h16"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <div class="iban" id="iban">
+        &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;
+        &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;
+      </div>
+
+      <div class="row">
+        <span class="country" id="country">Awaiting IBAN…</span>
+        <span class="pill unknown" id="pill">Not checked</span>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

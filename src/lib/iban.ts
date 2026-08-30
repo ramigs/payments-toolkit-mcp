@@ -80,20 +80,40 @@ const IBAN_LENGTHS: Record<string, number> = {
   XK: 20,
 };
 
-export function validateIban(rawIban: string): {
+/** Which check an IBAN failed, when `valid` is `false`. */
+export type IbanFailureReason = 'format' | 'country' | 'length' | 'checksum';
+
+export interface IbanValidation {
   valid: boolean;
+  /** ISO 3166-1 alpha-2 country code — absent only for a malformed prefix. */
   country?: string;
-} {
+  /** The normalised IBAN grouped into blocks of four for display. */
+  ibanFormatted?: string;
+  failureReason?: IbanFailureReason;
+}
+
+/** Group an IBAN into space-separated blocks of four: `DE89 3704 0044 …`. */
+export function formatIban(iban: string): string {
+  return iban.replace(/(.{4})/g, '$1 ').trim();
+}
+
+export function validateIban(rawIban: string): IbanValidation {
   const iban = rawIban.replace(/\s+/g, '').toUpperCase();
 
   if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(iban)) {
-    return { valid: false };
+    // Not IBAN-shaped — echo the normalised input as-is rather than forcing it
+    // into four-character groups.
+    return { valid: false, ibanFormatted: iban, failureReason: 'format' };
   }
 
   const country = iban.slice(0, 2);
+  const ibanFormatted = formatIban(iban);
   const expectedLength = IBAN_LENGTHS[country];
-  if (!expectedLength || iban.length !== expectedLength) {
-    return { valid: false, country };
+  if (!expectedLength) {
+    return { valid: false, country, ibanFormatted, failureReason: 'country' };
+  }
+  if (iban.length !== expectedLength) {
+    return { valid: false, country, ibanFormatted, failureReason: 'length' };
   }
 
   const rearranged = iban.slice(4) + iban.slice(0, 4);
@@ -103,6 +123,9 @@ export function validateIban(rawIban: string): {
     )
     .join('');
 
-  const valid = BigInt(numeric) % 97n === 1n;
-  return { valid, country };
+  if (BigInt(numeric) % 97n !== 1n) {
+    return { valid: false, country, ibanFormatted, failureReason: 'checksum' };
+  }
+
+  return { valid: true, country, ibanFormatted };
 }

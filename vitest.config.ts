@@ -6,7 +6,11 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'src/ui/card-preview/**'],
+      exclude: [
+        'src/**/*.test.ts',
+        'src/ui/card-preview/**',
+        'src/ui/iban-preview/**',
+      ],
     },
   },
 });

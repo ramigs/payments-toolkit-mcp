@@ -14,13 +14,22 @@ API keys required.
   (digits only, 8-19 length).
 - **`detect_card_type`** — identifies the card network (Visa, Mastercard,
   American Express, Discover, Diners Club, JCB) from the IIN/BIN prefix.
+  Bound to the `card-preview` MCP App widget.
 - **`validate_iban`** — format, country-specific length, and ISO 13616
-  mod-97 checksum validation for an IBAN.
+  mod-97 checksum validation for an IBAN. Bound to the `iban-preview` MCP
+  App widget; its result also carries the country name and flag SVG.
 
 ## Resources
 
 - **`card_networks`** (`payments-toolkit://card-networks`) — static JSON
   listing of supported card networks and their prefix ranges.
+- **`card-preview`** (`ui://payments-toolkit/card-preview`) — MCP App
+  widget HTML rendered by `detect_card_type`.
+- **`iban-preview`** (`ui://payments-toolkit/iban-preview`) — MCP App
+  widget HTML rendered by `validate_iban`; shows the grouped IBAN, its
+  country and flag, and whether the checksum passed. Flags are vendored
+  from [flag-icons](https://github.com/lipis/flag-icons) (MIT) by
+  `pnpm run vendor:flags`.
 
 ## Prompts
 
@@ -119,6 +128,7 @@ src/
     luhn.ts
     card-networks.ts
     iban.ts
+    flags.ts                 # loads one vendored country flag SVG on demand
     schemas.ts
   tools/                     # one file per registered MCP tool
     validate-card-number.ts
@@ -126,8 +136,16 @@ src/
     validate-iban.ts
   resources/                 # one file per registered MCP resource
     card-networks.ts
+    card-preview.ts          # serves the detect_card_type widget HTML
+    iban-preview.ts          # serves the validate_iban widget HTML
   prompts/                    # one file per registered MCP prompt
     check-payment-details.ts
+  ui/                        # MCP App widgets, bundled to one HTML file each by Vite
+    card-preview/
+    iban-preview/            # includes flags/ — vendored, served by validate_iban
+scripts/
+  vendor-flags.mjs           # regenerates src/ui/iban-preview/flags from flag-icons
+  copy-flags.mjs             # copies those flags into dist/ during build
 tests/
   unit/lib/                   # unit tests for src/lib, mirrored 1:1
   integration/

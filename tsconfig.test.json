@@ -4,5 +4,5 @@
     "rootDir": "."
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["src/ui/card-preview"]
+  "exclude": ["src/ui/card-preview", "src/ui/iban-preview"]
 }
