@@ -10,12 +10,20 @@
         margin: 0;
         font-family: -apple-system, system-ui, sans-serif;
       }
+      /* The host owns our width (it sends it in `containerDimensions` and sizes
+         the iframe); we fill it, capped at the ID-1 design size — a widget
+         can't ask for more room. Everything inside is in `cqw` (1cqw = 1% of
+         the card's width) so the whole card scales as one unit, and
+         `aspect-ratio` keeps the height proportional for `autoResize` to
+         report. */
       .card {
         position: relative;
         box-sizing: border-box;
-        width: 320px;
-        height: 205px;
-        border-radius: 14px;
+        width: 100%;
+        max-width: 320px;
+        aspect-ratio: 320 / 205;
+        container-type: inline-size;
+        border-radius: 4.375cqw;
         background: #6b7280;
         color: #fff;
         overflow: hidden;
@@ -25,18 +33,18 @@
          real ID-1 card. */
       .chip {
         position: absolute;
-        left: 28px;
-        top: 62px;
-        width: 46px;
-        height: 36px;
+        left: 8.75cqw;
+        top: 19.375cqw;
+        width: 14.375cqw;
+        height: 11.25cqw;
       }
       /* Own full-width line so it never wraps against the badge. */
       .number {
         position: absolute;
-        left: 20px;
-        right: 20px;
-        bottom: 46px;
-        font-size: 17px;
+        left: 6.25cqw;
+        right: 6.25cqw;
+        bottom: 14.375cqw;
+        font-size: 5.3125cqw;
         letter-spacing: 0.12em;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
@@ -46,13 +54,13 @@
          colour. Hidden when the network is unrecognised (empty logo layer). */
       .badge {
         position: absolute;
-        right: 20px;
-        bottom: 16px;
+        right: 6.25cqw;
+        bottom: 5cqw;
         box-sizing: border-box;
-        width: 52px;
-        height: 33px;
-        padding: 3px;
-        border-radius: 6px;
+        width: 16.25cqw;
+        height: 10.3125cqw;
+        padding: 0.9375cqw;
+        border-radius: 1.875cqw;
         background: #fff;
       }
       .badge:empty {
