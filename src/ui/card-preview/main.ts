@@ -8,6 +8,7 @@
  */
 import { App } from '@modelcontextprotocol/ext-apps';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { version } from '../../../package.json' with { type: 'json' };
 
 // Network artwork (flat-rounded variant) from aaronfagan/svg-credit-card-
 // payment-icons, Apache-2.0 — see icons/LICENSE. Imported as raw strings so the
@@ -76,6 +77,6 @@ function applyResult(result: CallToolResult): void {
   render(network ?? 'unknown', cardNumber ?? '');
 }
 
-const app = new App({ name: 'Card Preview', version: '1.0.0' });
+const app = new App({ name: 'Card Preview', version });
 app.ontoolresult = applyResult;
 void app.connect();

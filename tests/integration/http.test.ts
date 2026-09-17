@@ -14,7 +14,7 @@ function initializeBody() {
     params: {
       protocolVersion: LATEST_PROTOCOL_VERSION,
       capabilities: {},
-      clientInfo: { name: 'test-client', version: '0.0.0' },
+      clientInfo: { name: 'test-client', version: '1.0.0' },
     },
   };
 }

@@ -10,7 +10,7 @@ describe('payments-toolkit-mcp server', () => {
 
   beforeEach(async () => {
     server = createServer();
-    client = new Client({ name: 'test-client', version: '0.0.0' });
+    client = new Client({ name: 'test-client', version: '1.0.0' });
 
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

@@ -12,6 +12,7 @@
  */
 import { App } from '@modelcontextprotocol/ext-apps';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { version } from '../../../package.json' with { type: 'json' };
 
 interface IbanResult {
   valid?: boolean;
@@ -96,6 +97,6 @@ function applyResult(result: CallToolResult): void {
 
 window.addEventListener('resize', fitIban);
 
-const app = new App({ name: 'IBAN Preview', version: '1.0.0' });
+const app = new App({ name: 'IBAN Preview', version });
 app.ontoolresult = applyResult;
 void app.connect();

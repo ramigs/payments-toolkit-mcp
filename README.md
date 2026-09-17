@@ -1,12 +1,35 @@
 # payments-toolkit-mcp
 
-A minimal [Model Context Protocol](https://modelcontextprotocol.io) (MCP)
-server, built as a hands-on learning project (see [PLAN.md](./PLAN.md) for
-the full step-by-step walkthrough).
+Payments Toolkit is a validation assistant for **card numbers** and **IBANs**.
+Ask in plain English — it checks card numbers (Luhn checksum and card network)
+and IBANs (format, country length, checksum) by running real validators.
 
-It exposes payments-related validation utilities as MCP tools, one static
-resource, and one prompt template — all local logic, no network calls, no
+Learn more: [What I learned building my first end-to-end AI
+app](https://ramigs.dev/blog/what-i-learned-building-my-first-end-to-end-ai-app/)
+
+This is the MCP server: it exposes payments-related validation utilities as MCP
+tools, a static resource, two MCP Apps (widgets that render the card and IBAN
+tools' results), and a prompt template — all local logic, no network calls, no
 API keys required.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+**Table of Contents** _generated with [DocToc](https://github.com/thlorenz/doctoc)_
+
+- [Tools](#tools)
+- [Resources](#resources)
+- [Prompts](#prompts)
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [Usage](#usage)
+  - [Type-checking, linting, formatting, building](#type-checking-linting-formatting-building)
+- [Testing](#testing)
+- [Connect to Claude Code](#connect-to-claude-code)
+- [Project structure](#project-structure)
+- [Notes](#notes)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Tools
 
@@ -61,20 +84,31 @@ Stdio (default — one client per process, e.g. Claude Code/Desktop):
 pnpm run start
 ```
 
-Streamable HTTP (a single long-running server multiple clients can connect
-to over `POST/GET/DELETE /mcp`, with sessions keyed by the `Mcp-Session-Id`
+Streamable HTTP (a single long-running server multiple clients can connect to
+over `POST/GET/DELETE /mcp`, with sessions keyed by the `Mcp-Session-Id`
 header):
 
 ```bash
-pnpm run start:http          # listens on PORT (default 3000)
-PORT=4000 pnpm run start:http
+pnpm run start:http   # listens on PORT (default 3000)
 ```
 
-Inspect and call the tools/resource directly via a local web UI, without
-wiring up a client:
+Inspect and call the tools/resource directly via a local web UI, without wiring
+up a client:
 
 ```bash
 pnpm run inspect
+```
+
+### Type-checking, linting, formatting, building
+
+```bash
+pnpm run typecheck     # tsc --noEmit (server + tests + both widget tsconfigs)
+pnpm run lint          # eslint .
+pnpm run lint:fix      # eslint . --fix
+pnpm run format        # prettier --write .
+pnpm run format:check  # prettier --check .
+pnpm run build         # builds the widgets, compiles the server, copies flags into dist/
+pnpm run toc           # regenerates this README's table of contents
 ```
 
 ## Testing
@@ -85,11 +119,16 @@ pnpm run test:watch    # re-run on file changes
 pnpm run test:coverage # run once and print a coverage report
 ```
 
+Only `pnpm test` builds the widgets first (via its `pretest` hook). Run `pnpm
+run build:widget` beforehand if you use `test:watch` or `test:coverage` on a
+fresh checkout — otherwise the widget-resource tests fail with `ENOENT` on
+`dist/ui/*/mcp-app.html`.
+
 Tests are split into two kinds, mirroring `src/`:
 
 - `tests/unit/` — pure logic (`src/lib/*`), no MCP or HTTP involved.
-- `tests/integration/` — `server.test.ts` wires the real `McpServer` to a
-  real `Client` over an in-memory transport and drives it through
+- `tests/integration/` — `server.test.ts` wires the real `McpServer` to a real
+  `Client` over an in-memory transport and drives it through
   `tools/resources/prompts`; `http.test.ts` drives the Streamable HTTP
   transport's Express app directly with
   [supertest](https://github.com/ladjs/supertest) to cover session
@@ -110,54 +149,16 @@ Over HTTP (start the server with `pnpm run start:http` first):
 claude mcp add --transport http payments-toolkit-mcp http://localhost:3000/mcp
 ```
 
-Inside a Claude Code session, run `/mcp` to confirm the connection and see
-the discovered tools/resources/prompts. If you add or change a prompt after
-the session already connected, reconnect via `/mcp` (or restart the
-session) — the prompt list is enumerated at connection time.
-
-## Project structure
-
-```
-src/
-  index.ts                   # entry point: picks a transport from argv/env
-  server.ts                  # factory: builds an McpServer with tools/resources/prompts registered
-  transports/
-    stdio.ts                 # single-session stdio transport
-    http.ts                  # StreamableHTTPServerTransport, one server instance per session
-  lib/                       # pure validation/lookup logic (no MCP dependency)
-    luhn.ts
-    card-networks.ts
-    iban.ts
-    flags.ts                 # loads one vendored country flag SVG on demand
-    schemas.ts
-  tools/                     # one file per registered MCP tool
-    validate-card-number.ts
-    detect-card-type.ts
-    validate-iban.ts
-  resources/                 # one file per registered MCP resource
-    card-networks.ts
-    card-preview.ts          # serves the detect_card_type widget HTML
-    iban-preview.ts          # serves the validate_iban widget HTML
-  prompts/                    # one file per registered MCP prompt
-    check-payment-details.ts
-  ui/                        # MCP App widgets, bundled to one HTML file each by Vite
-    card-preview/
-    iban-preview/            # includes flags/ — vendored, served by validate_iban
-scripts/
-  vendor-flags.mjs           # regenerates src/ui/iban-preview/flags from flag-icons
-  copy-flags.mjs             # copies those flags into dist/ during build
-tests/
-  unit/lib/                   # unit tests for src/lib, mirrored 1:1
-  integration/
-    server.test.ts            # McpServer <-> Client over an in-memory transport
-    http.test.ts              # Streamable HTTP transport, via supertest
-```
+Inside a Claude Code session, run `/mcp` to confirm the connection and see the
+discovered tools/resources/prompts. If you add or change a prompt after the
+session already connected, reconnect via `/mcp` (or restart the session) — the
+prompt list is enumerated at connection time.
 
 ## Notes
 
-- Never `console.log` in this server — over stdio, stdout is reserved for
-  the JSON-RPC protocol stream. Use `console.error` for any debug output
-  (harmless but kept consistent for the HTTP transport too).
-- Each MCP server instance can only be `connect()`-ed to one transport, so
-  the HTTP transport creates a fresh `McpServer` per session (keyed by
+- Never `console.log` in this server — over stdio, stdout is reserved for the
+  JSON-RPC protocol stream. Use `console.error` for any debug output (harmless
+  but kept consistent for the HTTP transport too).
+- Each MCP server instance can only be `connect()`-ed to one transport, so the
+  HTTP transport creates a fresh `McpServer` per session (keyed by
   `Mcp-Session-Id`) rather than sharing one across clients.

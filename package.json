@@ -18,7 +18,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "toc": "doctoc README.md"
   },
   "keywords": [],
   "author": "",
@@ -40,6 +41,7 @@
     "@types/node": "^26.2.0",
     "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "^4.1.11",
+    "doctoc": "^2.5.0",
     "eslint": "^10.9.0",
     "eslint-config-prettier": "^10.1.8",
     "flag-icons": "^7.5.0",
