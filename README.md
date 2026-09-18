@@ -14,7 +14,6 @@ API keys required.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 **Table of Contents** _generated with [DocToc](https://github.com/thlorenz/doctoc)_
 
 - [Tools](#tools)
@@ -26,7 +25,7 @@ API keys required.
   - [Type-checking, linting, formatting, building](#type-checking-linting-formatting-building)
 - [Testing](#testing)
 - [Connect to Claude Code](#connect-to-claude-code)
-- [Project structure](#project-structure)
+- [Deployment](#deployment)
 - [Notes](#notes)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -89,8 +88,12 @@ over `POST/GET/DELETE /mcp`, with sessions keyed by the `Mcp-Session-Id`
 header):
 
 ```bash
-pnpm run start:http   # listens on PORT (default 3000)
+cp .env.example .env   # first time only — fill in MCP_AUTH_TOKEN
+pnpm run start:http    # listens on PORT (default 3000)
 ```
+
+`.env` is loaded automatically (via `dotenv`) and is gitignored. Stdio mode
+doesn't use it — `MCP_AUTH_TOKEN` only matters for HTTP.
 
 Inspect and call the tools/resource directly via a local web UI, without wiring
 up a client:
@@ -154,11 +157,32 @@ discovered tools/resources/prompts. If you add or change a prompt after the
 session already connected, reconnect via `/mcp` (or restart the session) — the
 prompt list is enumerated at connection time.
 
+## Deployment
+
+Running `start:http` as a standalone service (e.g. one Railway service talking
+to another, rather than a local stdio child) needs:
+
+- `MCP_AUTH_TOKEN` — a shared-secret bearer token; every request must present
+  it as `Authorization: Bearer <token>`, checked with a constant-time
+  comparison. `runHttp` throws at boot if it's unset. See `.env.example`.
+- **No public domain.** This token is defense-in-depth, not the primary
+  boundary — the intended deployment puts this service on a private network
+  (e.g. Railway's internal `*.railway.internal` networking) reachable only by
+  the caller that needs it, not the public internet. Full OAuth (the MCP
+  Authorization spec) is overkill here: that model exists for third-party
+  clients acting on behalf of many distinct end users, not a single caller you
+  control.
+- A `Dockerfile` is included, mirroring the deployment conventions of
+  `payments-toolkit-agent` (its consumer).
+
 ## Notes
 
-- Never `console.log` in this server — over stdio, stdout is reserved for the
-  JSON-RPC protocol stream. Use `console.error` for any debug output (harmless
-  but kept consistent for the HTTP transport too).
+- Over stdio, stdout is reserved for the JSON-RPC protocol stream, so that
+  transport's logs go to stderr — never `console.log` there, use
+  `console.error` for debug output. The HTTP transport has no such
+  constraint, so its logs go to stdout instead (see `src/lib/logger.ts`);
+  `index.ts` sets `MCP_TRANSPORT` (not meant to be set manually) so the
+  logger picks the right one.
 - Each MCP server instance can only be `connect()`-ed to one transport, so the
   HTTP transport creates a fresh `McpServer` per session (keyed by
   `Mcp-Session-Id`) rather than sharing one across clients.

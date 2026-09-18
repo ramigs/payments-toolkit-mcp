@@ -1,10 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import request from 'supertest';
 import type { Express } from 'express';
 import { LATEST_PROTOCOL_VERSION } from '@modelcontextprotocol/sdk/types.js';
 import { createApp } from '../../src/transports/http.js';
 
 const ACCEPT_BOTH = 'application/json, text/event-stream';
+const TOKEN = 'test-token';
+const AUTH_HEADER = `Bearer ${TOKEN}`;
 
 function initializeBody() {
   return {
@@ -23,6 +25,7 @@ async function initializeSession(app: Express): Promise<string> {
   const res = await request(app)
     .post('/mcp')
     .set('Accept', ACCEPT_BOTH)
+    .set('Authorization', AUTH_HEADER)
     .send(initializeBody());
   return res.headers['mcp-session-id'] as string;
 }
@@ -31,7 +34,56 @@ describe('HTTP transport', () => {
   let app: Express;
 
   beforeEach(() => {
+    vi.stubEnv('MCP_AUTH_TOKEN', TOKEN);
     app = createApp();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  describe('auth', () => {
+    it('rejects a request with no Authorization header', async () => {
+      const res = await request(app)
+        .post('/mcp')
+        .set('Accept', ACCEPT_BOTH)
+        .send(initializeBody());
+
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects a request with the wrong token', async () => {
+      const res = await request(app)
+        .post('/mcp')
+        .set('Accept', ACCEPT_BOTH)
+        .set('Authorization', 'Bearer wrong-token')
+        .send(initializeBody());
+
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects a malformed Authorization header', async () => {
+      const res = await request(app)
+        .post('/mcp')
+        .set('Accept', ACCEPT_BOTH)
+        .set('Authorization', TOKEN)
+        .send(initializeBody());
+
+      expect(res.status).toBe(401);
+    });
+
+    it('accepts GET/DELETE requests with a valid token (still 400 for other reasons)', async () => {
+      const getRes = await request(app)
+        .get('/mcp')
+        .set('Accept', 'text/event-stream')
+        .set('Authorization', AUTH_HEADER);
+      expect(getRes.status).toBe(400);
+
+      const deleteRes = await request(app)
+        .delete('/mcp')
+        .set('Authorization', AUTH_HEADER);
+      expect(deleteRes.status).toBe(400);
+    });
   });
 
   describe('POST /mcp', () => {
@@ -39,6 +91,7 @@ describe('HTTP transport', () => {
       const res = await request(app)
         .post('/mcp')
         .set('Accept', ACCEPT_BOTH)
+        .set('Authorization', AUTH_HEADER)
         .send({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} });
 
       expect(res.status).toBe(400);
@@ -49,6 +102,7 @@ describe('HTTP transport', () => {
       const res = await request(app)
         .post('/mcp')
         .set('Accept', ACCEPT_BOTH)
+        .set('Authorization', AUTH_HEADER)
         .send(initializeBody());
 
       expect(res.status).toBe(200);
@@ -61,6 +115,7 @@ describe('HTTP transport', () => {
       const res = await request(app)
         .post('/mcp')
         .set('Accept', ACCEPT_BOTH)
+        .set('Authorization', AUTH_HEADER)
         .set('mcp-session-id', sessionId)
         .send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
 
@@ -71,6 +126,7 @@ describe('HTTP transport', () => {
       const res = await request(app)
         .post('/mcp')
         .set('Accept', ACCEPT_BOTH)
+        .set('Authorization', AUTH_HEADER)
         .set('mcp-session-id', 'unknown-session')
         .send({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} });
 
@@ -82,7 +138,8 @@ describe('HTTP transport', () => {
     it('rejects a request with no session ID', async () => {
       const res = await request(app)
         .get('/mcp')
-        .set('Accept', 'text/event-stream');
+        .set('Accept', 'text/event-stream')
+        .set('Authorization', AUTH_HEADER);
 
       expect(res.status).toBe(400);
     });
@@ -91,6 +148,7 @@ describe('HTTP transport', () => {
       const res = await request(app)
         .get('/mcp')
         .set('Accept', 'text/event-stream')
+        .set('Authorization', AUTH_HEADER)
         .set('mcp-session-id', 'unknown-session');
 
       expect(res.status).toBe(400);
@@ -99,7 +157,9 @@ describe('HTTP transport', () => {
 
   describe('DELETE /mcp', () => {
     it('rejects a request with no session ID', async () => {
-      const res = await request(app).delete('/mcp');
+      const res = await request(app)
+        .delete('/mcp')
+        .set('Authorization', AUTH_HEADER);
 
       expect(res.status).toBe(400);
     });
@@ -107,6 +167,7 @@ describe('HTTP transport', () => {
     it('rejects a request with an unknown session ID', async () => {
       const res = await request(app)
         .delete('/mcp')
+        .set('Authorization', AUTH_HEADER)
         .set('mcp-session-id', 'unknown-session');
 
       expect(res.status).toBe(400);
@@ -117,12 +178,14 @@ describe('HTTP transport', () => {
 
       const deleteRes = await request(app)
         .delete('/mcp')
+        .set('Authorization', AUTH_HEADER)
         .set('mcp-session-id', sessionId);
       expect(deleteRes.status).toBe(200);
 
       const followUp = await request(app)
         .post('/mcp')
         .set('Accept', ACCEPT_BOTH)
+        .set('Authorization', AUTH_HEADER)
         .set('mcp-session-id', sessionId)
         .send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
       expect(followUp.status).toBe(400);
