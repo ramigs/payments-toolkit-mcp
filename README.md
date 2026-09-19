@@ -174,6 +174,12 @@ to another, rather than a local stdio child) needs:
   control.
 - A `Dockerfile` is included, mirroring the deployment conventions of
   `payments-toolkit-agent` (its consumer).
+- `DOTENV_CONFIG_QUIET=true` — optional, but recommended on a platform (like
+  Railway) that classifies logs by stream: `dotenv@18+` logs its own
+  "injected env (N) from .env" line via `console.error` regardless of
+  whether a `.env` file was even found, which such a platform then flags as
+  an error even though nothing failed. This variable silences that message;
+  it's read directly by `dotenv`, not by this app's own code.
 
 ## Notes
 
